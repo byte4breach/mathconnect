@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MathConnect — 8th Grade Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  /* ─── Variables ─────────────────────────────────────────── */
+  :root{
+    --bg:#0a0a0f;
+    --surface:#13131a;
+    --card:#1c1c28;
+    --border:#2a2a3d;
+    --accent:#7c6af7;
+    --accent2:#f7c26a;
+    --accent3:#6af7c2;
+    --red:#f76a6a;
+    --green:#6af7a0;
+    --text:#e8e8f0;
+    --muted:#6b6b85;
+    --font-display:'DM Serif Display',serif;
+    --font-mono:'Space Mono',monospace;
+    --font-body:'DM Sans',sans-serif;
+    --radius:16px;
+    --glow:0 0 40px rgba(124,106,247,.25);
+  }
+
+  /* ─── Reset ─────────────────────────────────────────────── */
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  /* ─── Noise texture overlay ──────────────────────────────── */
+  body::before{
+    content:'';
+    position:fixed;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none;z-index:0;opacity:.6;
+  }
+
+  /* ─── Floating math symbols background ───────────────────── */
+  .math-bg{
+    position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;
+  }
+  .sym{
+    position:absolute;
+    font-family:var(--font-mono);
+    color:var(--accent);
+    opacity:.04;
+    font-size:clamp(1rem,3vw,2rem);
+    animation:float linear infinite;
+    user-select:none;
+  }
+  @keyframes float{
+    0%  {transform:translateY(110vh) rotate(0deg);}
+    100%{transform:translateY(-10vh) rotate(360deg);}
+  }
+
+  /* ─── Layout ─────────────────────────────────────────────── */
+  .wrapper{
+    position:relative;z-index:1;
+    max-width:760px;margin:0 auto;
+    padding:2rem 1.5rem 5rem;
+  }
+
+  /* ─── Header ─────────────────────────────────────────────── */
+  header{text-align:center;padding:3rem 0 2rem;}
+  .logo-tag{
+    display:inline-block;
+    font-family:var(--font-mono);
+    font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--accent3);
+    background:rgba(106,247,194,.08);
+    border:1px solid rgba(106,247,194,.2);
+    padding:.35rem .9rem;border-radius:100px;margin-bottom:1.2rem;
+  }
+  header h1{
+    font-family:var(--font-display);
+    font-size:clamp(2.4rem,7vw,4rem);
+    line-height:1;letter-spacing:-.02em;color:#fff;
+    margin-bottom:.5rem;
+  }
+  header h1 em{color:var(--accent);font-style:italic;}
+  header p{color:var(--muted);font-size:1rem;max-width:440px;margin:0 auto;}
+
+  /* ─── Setup card ─────────────────────────────────────────── */
+  .setup-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:2rem;margin:2rem 0;
+    box-shadow:var(--glow);
+    animation:slideUp .6s cubic-bezier(.16,1,.3,1) both;
+  }
+  @keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+  .setup-row{display:flex;gap:1rem;flex-wrap:wrap;}
+  .field{flex:1;min-width:200px;}
+  label{
+    display:block;
+    font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:.5rem;
+    font-family:var(--font-mono);
+  }
+  input[type=text],input[type=number]{
+    width:100%;padding:.8rem 1rem;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    color:var(--text);font-family:var(--font-body);font-size:.95rem;
+    outline:none;transition:border-color .2s,box-shadow .2s;
+  }
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,106,247,.15);}
+  .tg-hint{font-size:.75rem;color:var(--muted);margin-top:.4rem;}
+  .tg-hint a{color:var(--accent3);text-decoration:none;}
+  .tg-hint a:hover{text-decoration:underline;}
+
+  /* ─── Buttons ─────────────────────────────────────────────── */
+  .btn{
+    display:inline-flex;align-items:center;gap:.5rem;
+    padding:.85rem 1.8rem;border-radius:12px;
+    font-family:var(--font-body);font-weight:600;font-size:.9rem;
+    cursor:pointer;border:none;transition:transform .15s,box-shadow .2s,opacity .2s;
+    letter-spacing:.01em;
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn:active{transform:translateY(0);}
+  .btn-primary{
+    background:var(--accent);color:#fff;
+    box-shadow:0 4px 20px rgba(124,106,247,.4);
+  }
+  .btn-primary:hover{box-shadow:0 8px 30px rgba(124,106,247,.6);}
+  .btn-ghost{
+    background:var(--surface);color:var(--text);
+    border:1px solid var(--border);
+  }
+  .btn-sm{padding:.55rem 1.1rem;font-size:.8rem;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+  /* ─── Progress bar ───────────────────────────────────────── */
+  .progress-wrap{margin:1.5rem 0;}
+  .progress-meta{display:flex;justify-content:space-between;font-size:.75rem;
+    color:var(--muted);font-family:var(--font-mono);margin-bottom:.6rem;}
+  .progress-bar{height:4px;background:var(--border);border-radius:100px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));
+    border-radius:100px;transition:width .4s cubic-bezier(.16,1,.3,1);}
+
+  /* ─── Question card ──────────────────────────────────────── */
+  .q-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:2rem;margin:1.5rem 0;
+    animation:slideUp .45s cubic-bezier(.16,1,.3,1) both;
+    position:relative;overflow:hidden;
+  }
+  .q-card::before{
+    content:'';position:absolute;top:-60px;right:-60px;
+    width:180px;height:180px;border-radius:50%;
+    background:radial-gradient(circle,rgba(124,106,247,.12),transparent 70%);
+    pointer-events:none;
+  }
+  .topic-badge{
+    display:inline-flex;align-items:center;gap:.4rem;
+    font-family:var(--font-mono);font-size:.65rem;
+    letter-spacing:.1em;text-transform:uppercase;
+    padding:.3rem .8rem;border-radius:100px;
+    background:rgba(124,106,247,.12);
+    border:1px solid rgba(124,106,247,.25);
+    color:var(--accent);margin-bottom:1rem;
+  }
+  .q-number{
+    font-family:var(--font-mono);font-size:.75rem;
+    color:var(--muted);margin-bottom:.5rem;
+  }
+  .q-text{
+    font-family:var(--font-display);font-size:1.4rem;
+    line-height:1.4;margin-bottom:1.5rem;color:#fff;
+  }
+  .answer-row{display:flex;gap:.75rem;align-items:flex-start;flex-wrap:wrap;}
+  .answer-row input{flex:1;min-width:160px;}
+  .hint-btn{
+    font-family:var(--font-mono);font-size:.7rem;
+    background:none;border:1px dashed var(--border);
+    color:var(--muted);padding:.5rem 1rem;border-radius:8px;
+    cursor:pointer;transition:color .2s,border-color .2s;
+    white-space:nowrap;
+  }
+  .hint-btn:hover{color:var(--accent2);border-color:var(--accent2);}
+  .hint-box{
+    margin-top:1rem;padding:.9rem 1rem;
+    background:rgba(247,194,106,.06);
+    border:1px solid rgba(247,194,106,.18);
+    border-radius:10px;
+    font-size:.85rem;color:var(--accent2);
+    display:none;
+    animation:slideUp .3s cubic-bezier(.16,1,.3,1) both;
+  }
+  .hint-box.show{display:block;}
+
+  /* ─── Feedback states ────────────────────────────────────── */
+  .feedback{
+    margin-top:1rem;padding:.9rem 1rem;border-radius:10px;
+    font-size:.9rem;font-weight:500;display:none;
+    animation:slideUp .3s cubic-bezier(.16,1,.3,1) both;
+  }
+  .feedback.correct{
+    background:rgba(106,247,160,.08);border:1px solid rgba(106,247,160,.25);color:var(--green);display:block;
+  }
+  .feedback.wrong{
+    background:rgba(247,106,106,.08);border:1px solid rgba(247,106,106,.25);color:var(--red);display:block;
+  }
+  .explanation{
+    margin-top:.6rem;font-size:.8rem;opacity:.75;font-family:var(--font-mono);
+  }
+
+  /* ─── Nav buttons ────────────────────────────────────────── */
+  .q-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;}
+
+  /* ─── Score screen ───────────────────────────────────────── */
+  #scoreScreen{display:none;}
+  .score-hero{
+    text-align:center;padding:3rem 2rem;
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);margin:2rem 0;
+    box-shadow:var(--glow);
+    animation:slideUp .5s cubic-bezier(.16,1,.3,1) both;
+  }
+  .score-ring{
+    width:130px;height:130px;margin:0 auto 1.5rem;
+    position:relative;
+  }
+  .score-ring svg{transform:rotate(-90deg);}
+  .score-num{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+  }
+  .score-num span:first-child{
+    font-family:var(--font-mono);font-size:2rem;font-weight:700;color:#fff;
+  }
+  .score-num span:last-child{font-size:.7rem;color:var(--muted);}
+  .score-label{
+    font-family:var(--font-display);font-size:2rem;color:#fff;margin-bottom:.5rem;
+  }
+  .score-sub{color:var(--muted);font-size:.9rem;margin-bottom:1.5rem;}
+  .tg-status{
+    font-family:var(--font-mono);font-size:.75rem;
+    padding:.5rem 1rem;border-radius:8px;display:inline-block;margin-bottom:1.5rem;
+  }
+  .tg-status.sent{background:rgba(106,247,160,.1);color:var(--green);}
+  .tg-status.nosend{background:rgba(107,107,133,.1);color:var(--muted);}
+
+  /* ─── Breakdown table ────────────────────────────────────── */
+  .breakdown{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:1.5rem;margin:1.5rem 0;
+    animation:slideUp .6s .1s cubic-bezier(.16,1,.3,1) both;
+  }
+  .breakdown h3{
+    font-family:var(--font-mono);font-size:.7rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:1rem;
+  }
+  .b-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:.75rem 0;border-bottom:1px solid var(--border);
+    font-size:.85rem;
+  }
+  .b-row:last-child{border-bottom:none;}
+  .b-topic{color:var(--text);}
+  .b-answers{display:flex;gap:.75rem;align-items:center;font-family:var(--font-mono);font-size:.75rem;}
+  .b-yours{color:var(--muted);}
+  .b-right{color:var(--accent3);}
+  .tick{font-size:1.1rem;}
+
+  /* ─── Leaderboard ────────────────────────────────────────── */
+  .lb-card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:1.5rem;margin:1.5rem 0;
+    animation:slideUp .6s .2s cubic-bezier(.16,1,.3,1) both;
+  }
+  .lb-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+  .lb-header h3{
+    font-family:var(--font-mono);font-size:.7rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .lb-row{
+    display:flex;align-items:center;gap:1rem;
+    padding:.65rem 0;border-bottom:1px solid var(--border);
+  }
+  .lb-row:last-child{border-bottom:none;}
+  .lb-rank{font-family:var(--font-mono);font-size:.8rem;color:var(--muted);width:24px;}
+  .lb-name{flex:1;font-size:.9rem;}
+  .lb-score{font-family:var(--font-mono);font-size:.8rem;color:var(--accent3);}
+  .lb-pct{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);}
+  .medal-1{color:#ffd700;} .medal-2{color:#c0c0c0;} .medal-3{color:#cd7f32;}
+
+  /* ─── Loading spinner ────────────────────────────────────── */
+  .spinner{
+    width:40px;height:40px;border:3px solid var(--border);
+    border-top-color:var(--accent);border-radius:50%;
+    animation:spin .8s linear infinite;margin:3rem auto;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ─── Responsive ─────────────────────────────────────────── */
+  @media(max-width:520px){
+    .setup-row{flex-direction:column;}
+    .answer-row{flex-direction:column;}
+    .answer-row .btn{width:100%;justify-content:center;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Floating symbols background -->
+<div class="math-bg" id="mathBg"></div>
+
+<div class="wrapper">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="logo-tag">📐 8th Grade Mathematics</div>
+    <h1>Math<em>Connect</em></h1>
+    <p>Practice linear equations, geometry, exponents, and more — linked to your Telegram bot.</p>
+  </header>
+
+  <!-- ── Setup screen ── -->
+  <div id="setupScreen">
+    <div class="setup-card">
+      <div class="setup-row">
+        <div class="field">
+          <label>Your Name</label>
+          <input type="text" id="nameInput" placeholder="e.g. Alex" maxlength="32"/>
+        </div>
+        <div class="field">
+          <label>Telegram Chat ID <span style="color:var(--muted)">(optional)</span></label>
+          <input type="number" id="chatIdInput" placeholder="e.g. 123456789"/>
+          <p class="tg-hint">
+            Send <strong>/start</strong> to
+            <a href="https://t.me/mathconnect" target="_blank">@mathconnect</a>
+            to get your ID. Results will be DM'd to you!
+          </p>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem;">
+        <button class="btn btn-primary" onclick="startQuiz()">
+          ▶ Start Quiz (6 questions)
+        </button>
+      </div>
+    </div>
+
+    <!-- Live leaderboard on setup screen -->
+    <div class="lb-card">
+      <div class="lb-header">
+        <h3>🏆 Leaderboard</h3>
+        <button class="btn btn-ghost btn-sm" onclick="loadLeaderboard()">↻ Refresh</button>
+      </div>
+      <div id="lbList"><p style="color:var(--muted);font-size:.85rem;">Loading…</p></div>
+    </div>
+  </div>
+
+  <!-- ── Quiz screen ── -->
+  <div id="quizScreen" style="display:none">
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span id="progressLabel">Question 1 of 6</span>
+        <span id="scoreLabel">Score: 0</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="q-card" id="qCard">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <!-- ── Score screen ── -->
+  <div id="scoreScreen">
+    <div class="score-hero">
+      <div class="score-ring">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <circle cx="65" cy="65" r="55" fill="none" stroke="var(--border)" stroke-width="10"/>
+          <circle cx="65" cy="65" r="55" fill="none" stroke="var(--accent)" stroke-width="10"
+            stroke-linecap="round" stroke-dasharray="345.6"
+            id="ringProgress" stroke-dashoffset="345.6"/>
+        </svg>
+        <div class="score-num">
+          <span id="finalScore">0/6</span>
+          <span id="finalPct">0%</span>
+        </div>
+      </div>
+      <div class="score-label" id="scoreEmoji">Great work!</div>
+      <div class="score-sub" id="scoreSub"></div>
+      <div class="tg-status nosend" id="tgStatus">Telegram not linked</div>
+      <div>
+        <button class="btn btn-primary" onclick="restartQuiz()" style="margin-right:.75rem">↺ Try Again</button>
+        <button class="btn btn-ghost" onclick="goHome()">⌂ Home</button>
+      </div>
+    </div>
+
+    <!-- Breakdown -->
+    <div class="breakdown">
+      <h3>📋 Topic Breakdown</h3>
+      <div id="breakdownList"></div>
+    </div>
+
+    <!-- Leaderboard on score screen -->
+    <div class="lb-card">
+      <div class="lb-header">
+        <h3>🏆 Leaderboard</h3>
+        <button class="btn btn-ghost btn-sm" onclick="loadLeaderboard('scoreLb')">↻ Refresh</button>
+      </div>
+      <div id="scoreLb"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<script>
+// ─── Backend URL ──────────────────────────────────────────────────
+// Only used for /api/submit and /api/leaderboard (score saving + Telegram).
+// Questions are now generated locally in JS — no backend needed for the quiz itself.
+// Set this to your running bot server URL, e.g. 'https://mathconnect.up.railway.app'
+// Leave empty '' if you don't have a backend (leaderboard + Telegram will be disabled).
+const API_BASE = 'https://mathconnect-w5og.onrender.com';  // ← set to your backend URL if you have one
+
+// ─── Local question generator ─────────────────────────────────────
+function generateQuestions() {
+  const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+  const qs = [];
+
+  // 1. Linear equations  ax + b = c
+  let a = rand(2,9), b = rand(1,20), c = rand(10,50);
+  let x = Math.round((c - b) / a * 100) / 100;
+  qs.push({ topic:"Linear Equations",
+    question:`Solve for x:  ${a}x + ${b} = ${c}`,
+    answer:x, hint:`Subtract ${b} from both sides, then divide by ${a}.`,
+    explanation:`${a}x = ${c} - ${b} = ${c-b}, so x = ${c-b}/${a} = ${x}` });
+
+  // 2. Pythagorean theorem
+  let la = rand(3,12), lb = rand(3,12);
+  let hyp = Math.round(Math.sqrt(la*la + lb*lb) * 100) / 100;
+  qs.push({ topic:"Pythagorean Theorem",
+    question:`A right triangle has legs a = ${la} and b = ${lb}. Find the hypotenuse c.`,
+    answer:hyp, hint:"Use c² = a² + b²",
+    explanation:`c = √(${la}² + ${lb}²) = √${la*la+lb*lb} ≈ ${hyp}` });
+
+  // 3. Systems of equations
+  let x0 = rand(2,10), y0 = rand(2,10);
+  let S = x0+y0, D = x0-y0;
+  qs.push({ topic:"Systems of Equations",
+    question:`Solve: x + y = ${S} and x − y = ${D}. Find x.`,
+    answer:x0, hint:"Add the two equations together.",
+    explanation:`Adding: 2x = ${S+D}, so x = ${x0}; then y = ${S} − ${x0} = ${y0}` });
+
+  // 4. Area of a circle
+  let r = rand(3,12);
+  let area = Math.round(Math.PI * r * r * 100) / 100;
+  qs.push({ topic:"Geometry – Circles",
+    question:`Find the area of a circle with radius r = ${r}. (Use π ≈ 3.14159, round to 2 decimals)`,
+    answer:area, hint:"Area = πr²",
+    explanation:`A = π × ${r}² = π × ${r*r} ≈ ${area}` });
+
+  // 5. Percent change
+  let orig = rand(40,200), nv = rand(20,300);
+  let pct = Math.round((nv - orig) / orig * 10000) / 100;
+  qs.push({ topic:"Percentages",
+    question:`A price changed from $${orig} to $${nv}. What is the percent change? (positive = increase, negative = decrease)`,
+    answer:pct, hint:"% change = (new − old) / old × 100",
+    explanation:`(${nv} − ${orig}) / ${orig} × 100 = ${pct}%` });
+
+  // 6. Slope between two points
+  let x1=rand(-5,5), y1=rand(-5,5), x2=rand(-5,5), y2=rand(-5,5);
+  while(x1===x2) x2=rand(-5,5);
+  let slope = Math.round((y2-y1)/(x2-x1)*100)/100;
+  qs.push({ topic:"Linear Functions",
+    question:`Find the slope of the line through (${x1}, ${y1}) and (${x2}, ${y2}).`,
+    answer:slope, hint:"slope = (y₂ − y₁) / (x₂ − x₁)",
+    explanation:`m = (${y2} − ${y1}) / (${x2} − ${x1}) = ${y2-y1}/${x2-x1} = ${slope}` });
+
+  // 7. Exponent rule
+  let base=rand(2,5), m=rand(2,5), n=rand(2,5);
+  qs.push({ topic:"Exponents",
+    question:`Simplify: ${base}^${m} × ${base}^${n} = ${base}^?  (enter the exponent only)`,
+    answer:m+n, hint:"When multiplying same base: aᵐ × aⁿ = aᵐ⁺ⁿ",
+    explanation:`${base}^${m} × ${base}^${n} = ${base}^(${m}+${n}) = ${base}^${m+n}` });
+
+  // 8. Volume of rectangular prism
+  let l=rand(2,10), w=rand(2,10), h=rand(2,10);
+  qs.push({ topic:"3D Geometry",
+    question:`Find the volume of a rectangular prism with l=${l}, w=${w}, h=${h}.`,
+    answer:l*w*h, hint:"V = l × w × h",
+    explanation:`V = ${l} × ${w} × ${h} = ${l*w*h}` });
+
+  // Shuffle and return 6
+  for(let i=qs.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [qs[i],qs[j]]=[qs[j],qs[i]];
+  }
+  return qs.slice(0,6);
+}
+
+// ─── State ────────────────────────────────────────────────────────
+let questions = [];
+let current   = 0;
+let score     = 0;
+let answered  = false;
+let details   = [];
+let playerName = '';
+let chatId     = null;
+
+// ─── Floating math symbols ─────────────────────────────────────
+(function(){
+  const syms = ['∑','∫','π','√','∞','Δ','θ','λ','≡','∝','∂','≈','±','÷','×','²','³'];
+  const bg   = document.getElementById('mathBg');
+  for(let i=0;i<22;i++){
+    const s = document.createElement('span');
+    s.className = 'sym';
+    s.textContent = syms[Math.floor(Math.random()*syms.length)];
+    s.style.left  = Math.random()*100+'%';
+    s.style.animationDuration = (18+Math.random()*25)+'s';
+    s.style.animationDelay   = (-Math.random()*30)+'s';
+    s.style.fontSize          = (0.9+Math.random()*1.8)+'rem';
+    bg.appendChild(s);
+  }
+})();
+
+// ─── Load leaderboard ─────────────────────────────────────────
+async function loadLeaderboard(targetId='lbList'){
+  const el = document.getElementById(targetId);
+  if(!API_BASE){
+    el.innerHTML='<p style="color:var(--muted);font-size:.85rem;padding:.5rem 0">Leaderboard requires a backend server.</p>';
+    return;
+  }
+  try{
+    const r  = await fetch(API_BASE + '/api/leaderboard');
+    const lb = await r.json();
+    if(!lb.length){el.innerHTML='<p style="color:var(--muted);font-size:.85rem;padding:.5rem 0">No scores yet — be the first! 🚀</p>';return;}
+    const medals=['🥇','🥈','🥉'];
+    el.innerHTML = lb.map((e,i)=>`
+      <div class="lb-row">
+        <span class="lb-rank ${i<3?'medal-'+(i+1):''}">${i<3?medals[i]:'#'+(i+1)}</span>
+        <span class="lb-name">${esc(e.name)}</span>
+        <span class="lb-score">${e.score}/${e.total}</span>
+        <span class="lb-pct">${e.pct}%</span>
+      </div>`).join('');
+  }catch(err){
+    el.innerHTML='<p style="color:var(--red);font-size:.85rem">Could not load leaderboard.</p>';
+  }
+}
+loadLeaderboard();
+
+// ─── Start quiz ───────────────────────────────────────────────
+function startQuiz(){
+  playerName = document.getElementById('nameInput').value.trim() || 'Anonymous';
+  const raw  = document.getElementById('chatIdInput').value.trim();
+  chatId = raw ? parseInt(raw) : null;
+
+  document.getElementById('setupScreen').style.display='none';
+  document.getElementById('quizScreen').style.display='block';
+
+  questions = generateQuestions();  // generated locally — no server needed
+  current = 0; score = 0; details = [];
+  renderQuestion();
+}
+
+// ─── Render question ──────────────────────────────────────────
+function renderQuestion(){
+  answered = false;
+  const q   = questions[current];
+  const pct = (current / questions.length) * 100;
+
+  document.getElementById('progressLabel').textContent=`Question ${current+1} of ${questions.length}`;
+  document.getElementById('scoreLabel').textContent=`Score: ${score}`;
+  document.getElementById('progressFill').style.width=pct+'%';
+
+  document.getElementById('qCard').innerHTML=`
+    <div class="topic-badge">📐 ${esc(q.topic)}</div>
+    <div class="q-number">Question ${current+1}</div>
+    <div class="q-text">${esc(q.question)}</div>
+    <div class="answer-row">
+      <input type="number" step="any" id="answerInput"
+        placeholder="Your answer…"
+        onkeydown="if(event.key==='Enter')checkAnswer()"/>
+      <button class="btn btn-primary" onclick="checkAnswer()">Submit ▸</button>
+      <button class="hint-btn" onclick="toggleHint()">💡 Hint</button>
+    </div>
+    <div class="hint-box" id="hintBox">💡 ${esc(q.hint)}</div>
+    <div class="feedback" id="feedback"></div>
+    <div class="q-nav" id="qNav" style="display:none">
+      <span></span>
+      <button class="btn btn-ghost" onclick="nextQuestion()">
+        ${current+1 < questions.length ? 'Next Question →' : 'See Results 🎉'}
+      </button>
+    </div>`;
+
+  setTimeout(()=>document.getElementById('answerInput')?.focus(),100);
+}
+
+// ─── Check answer ─────────────────────────────────────────────
+function checkAnswer(){
+  if(answered) return;
+  const inp = document.getElementById('answerInput');
+  if(!inp || inp.value==='') return;
+
+  const q     = questions[current];
+  const given = parseFloat(inp.value);
+  const right = parseFloat(q.answer);
+  const tol   = Math.abs(right * 0.01) + 0.01;    // 1% tolerance
+  const ok    = Math.abs(given - right) <= tol;
+
+  answered = true;
+  inp.disabled = true;
+
+  const fb = document.getElementById('feedback');
+  if(ok){
+    score++;
+    fb.className='feedback correct';
+    fb.innerHTML=`✅ Correct! <div class="explanation">${esc(q.explanation)}</div>`;
+  }else{
+    fb.className='feedback wrong';
+    fb.innerHTML=`❌ Not quite. <div class="explanation">${esc(q.explanation)}</div>`;
+  }
+
+  details.push({topic:q.topic, correct:ok, userAnswer:given, rightAnswer:right});
+  document.getElementById('scoreLabel').textContent=`Score: ${score}`;
+  document.getElementById('qNav').style.display='flex';
+}
+
+// ─── Next question ────────────────────────────────────────────
+function nextQuestion(){
+  current++;
+  if(current < questions.length){
+    document.getElementById('qCard').style.animation='none';
+    document.getElementById('qCard').offsetHeight;  // reflow
+    document.getElementById('qCard').style.animation='';
+    renderQuestion();
+  }else{
+    showScore();
+  }
+}
+
+function toggleHint(){
+  document.getElementById('hintBox').classList.toggle('show');
+}
+
+// ─── Score screen ─────────────────────────────────────────────
+async function showScore(){
+  document.getElementById('progressFill').style.width='100%';
+  document.getElementById('quizScreen').style.display='none';
+  document.getElementById('scoreScreen').style.display='block';
+
+  const total = questions.length;
+  const pct   = Math.round(score/total*100);
+
+  document.getElementById('finalScore').textContent=`${score}/${total}`;
+  document.getElementById('finalPct').textContent=pct+'%';
+
+  // Animated ring
+  const circ  = 2*Math.PI*55;
+  const offset= circ*(1-pct/100);
+  setTimeout(()=>{
+    const ring = document.getElementById('ringProgress');
+    ring.style.transition='stroke-dashoffset 1s cubic-bezier(.16,1,.3,1)';
+    ring.style.strokeDashoffset = offset;
+    ring.style.stroke = pct>=80?'var(--green)':pct>=50?'var(--accent)':'var(--red)';
+  },100);
+
+  const labels={
+    great:['🌟 Exceptional!','You nailed it — top of the class!'],
+    good: ['👍 Good job!','Keep practising and you\'ll be unstoppable.'],
+    ok:   ['📚 Keep going!','Every mistake is a lesson in disguise.']
+  };
+  const lbl = pct>=80?labels.great:pct>=50?labels.good:labels.ok;
+  document.getElementById('scoreEmoji').textContent=lbl[0];
+  document.getElementById('scoreSub').textContent  =lbl[1];
+
+  // Breakdown
+  document.getElementById('breakdownList').innerHTML = details.map(d=>`
+    <div class="b-row">
+      <span class="tick">${d.correct?'✅':'❌'}</span>
+      <span class="b-topic">${esc(d.topic)}</span>
+      <div class="b-answers">
+        <span class="b-yours">you: ${d.userAnswer}</span>
+        <span class="b-right">✓ ${d.rightAnswer}</span>
+      </div>
+    </div>`).join('');
+
+  // Submit to server + Telegram
+  try{
+    const res = await fetch(API_BASE + '/api/submit',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:playerName,score,total,details,chat_id:chatId})
+    });
+    const data = await res.json();
+    const tgEl = document.getElementById('tgStatus');
+    if(chatId && data.tg?.ok){
+      tgEl.className='tg-status sent';
+      tgEl.textContent='✅ Results sent to Telegram!';
+    }else if(chatId){
+      tgEl.className='tg-status nosend';
+      tgEl.textContent='⚠ Could not reach Telegram.';
+    }else{
+      tgEl.className='tg-status nosend';
+      tgEl.textContent='ℹ Telegram not linked (enter Chat ID to enable)';
+    }
+  }catch(e){
+    document.getElementById('tgStatus').textContent='⚠ Server error.';
+  }
+
+  loadLeaderboard('scoreLb');
+}
+
+// ─── Restart / Home ───────────────────────────────────────────
+function restartQuiz(){
+  document.getElementById('scoreScreen').style.display='none';
+  document.getElementById('quizScreen').style.display='block';
+  startQuiz();
+}
+function goHome(){
+  document.getElementById('scoreScreen').style.display='none';
+  document.getElementById('setupScreen').style.display='block';
+  loadLeaderboard();
+}
+
+// ─── Util ─────────────────────────────────────────────────────
+function esc(s){
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
