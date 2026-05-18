@@ -11,10 +11,10 @@ BOT_TOKEN = "8831329165:AAHqhpGNLrzYBus-6seT1wxg49LcAQyvAKU"
 TELEGRAM_API = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 # ── Website link ─────────────────────────────────────────────────
-WEBSITE_URL = "https://byte4breach.github.io/mathconnect"
+WEBSITE_URL = "https://mathconnect-w5og.onrender.com"
 
 # ── PostgreSQL config ─────────────────────────────────────────────
-DATABASE_URL = "postgresql://postgres:postgres@localhost:1234/mathconnect"
+DATABASE_URL = "postgresql://mathconnect_user:5xYSIVsJmht5lZ5rLOGKaRPk6Lboi8F3@dpg-d85bh3brjlhs73drgmg0-a/mathconnect"
 
 
 def get_db():
